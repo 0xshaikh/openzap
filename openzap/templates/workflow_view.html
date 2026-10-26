@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ row.name }}{% endblock %}
+{% block content %}
+<h1>{{ row.name }}</h1>
+<p class="lede">{{ row.description or 'No description.' }}</p>
+
+<div class="grid cards">
+  <div class="card">
+    <div class="k">Status</div>
+    <div class="v small">
+      {% if row.enabled %}<span class="pill ok">enabled</span>{% else %}<span class="pill off">disabled</span>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="k">Trigger</div>
+    <div class="v small">
+      {% if row.trigger_type == 'schedule' %}<code>{{ row.trigger_cron }}</code>{% else %}webhook{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="k">Steps</div>
+    <div class="v">{{ definition.steps|length }}</div>
+  </div>
+  <div class="card">
+    <div class="k">Hook token</div>
+    <div class="v small mono">{{ row.hook_token[:12] }}…</div>
+  </div>
+</div>
+
+{% if hook_url %}
+<div class="panel" style="margin-bottom:22px">
+  <div class="k muted small" style="margin-bottom:6px">Webhook URL</div>
+  <pre>{{ hook_url }}</pre>
+  <pre class="mono">curl -X POST {{ hook_url }} \
+  -H 'Content-Type: application/json' \
+  -d '{"email": "ada@example.com"}'</pre>
+</div>
+{% endif %}
+
+<div class="row" style="margin-bottom:22px">
+  <a class="btn" href="{{ root_path }}/workflows/{{ row.name }}/edit">Edit definition</a>
+  <form method="post" action="{{ root_path }}/workflows/{{ row.name }}/run" style="display:inline">
+    <input type="hidden" name="payload" value='{}'>
+    <button class="btn ghost" type="submit">Run now</button>
+  </form>
+  <a class="btn ghost" href="{{ root_path }}/runs?workflow={{ row.name }}">Run history</a>
+</div>
+
+<h2>Definition</h2>
+<div class="panel"><pre>{{ definition|prettyjson }}</pre></div>
+
+{% if runs %}
+<h2>Recent runs</h2>
+<div class="panel">
+<table>
+  <thead><tr><th>#</th><th>Status</th><th>Started (UTC)</th><th>Duration</th><th>Error</th></tr></thead>
+  <tbody>
+  {% for run in runs %}
+    <tr>
+      <td><a href="{{ root_path }}/runs/{{ run.id }}" class="mono">{{ run.id }}</a></td>
+      <td>{% if run.status == 'success' %}<span class="pill ok">success</span>{% else %}<span class="pill err">failed</span>{% endif %}</td>
+      <td class="small muted mono">{{ run.started_at }}</td>
+      <td class="mono">{{ run.duration_ms }} ms</td>
+      <td class="small muted">{{ (run.error or '—')[:120] }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

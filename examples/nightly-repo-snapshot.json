@@ -1,0 +1,39 @@
+{
+  "name": "nightly-repo-snapshot",
+  "description": "Every night at 03:15 UTC, fetch the GitHub API for this repository and write the response to disk.",
+  "enabled": true,
+  "stop_on_error": true,
+  "trigger": {
+    "type": "schedule",
+    "config": {
+      "cron": "15 3 * * *",
+      "payload": {
+        "note": "Cron-triggered run; the payload can carry any static context."
+      }
+    }
+  },
+  "steps": [
+    {
+      "name": "fetch",
+      "type": "http_request",
+      "method": "GET",
+      "url": "https://api.github.com/repos/0xshaikh/openzap",
+      "headers": {
+        "Accept": "application/vnd.github+json"
+      },
+      "timeout": 20
+    },
+    {
+      "name": "write",
+      "type": "write_file",
+      "path": "snapshots/openzap.json",
+      "data": "{{ steps.fetch.response.body }}"
+    },
+    {
+      "name": "log",
+      "type": "log",
+      "level": "info",
+      "message": "snapshot of {{ steps.write.path }} written (HTTP {{ steps.fetch.response.status_code }})"
+    }
+  ]
+}

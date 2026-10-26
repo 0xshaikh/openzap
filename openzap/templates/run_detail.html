@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Run {{ run.id }}{% endblock %}
+{% block content %}
+<h1>Run #{{ run.id }} · <a href="{{ root_path }}/workflows/{{ run.workflow_name }}">{{ run.workflow_name }}</a></h1>
+<p class="lede">
+  {% if run.status == 'success' %}<span class="pill ok">success</span>{% else %}<span class="pill err">failed</span>{% endif %}
+  &nbsp;started {{ run.started_at }} · finished {{ run.finished_at or '—' }} · {{ run.duration_ms }} ms
+  &nbsp;<a href="{{ root_path }}/runs">‹ back to history</a>
+</p>
+
+{% if run.error %}<div class="flash err">{{ run.error }}</div>{% endif %}
+
+<h2>Trigger payload</h2>
+<div class="panel"><pre>{{ run.input|prettyjson }}</pre></div>
+
+<h2>Steps</h2>
+{% for step in run.steps %}
+<details class="step" {% if loop.first %}open{% endif %}>
+  <summary>
+    {% if step.status == 'success' %}<span class="pill ok">success</span>
+    {% elif step.status == 'skipped' %}<span class="pill warn">skipped</span>
+    {% else %}<span class="pill err">failed</span>{% endif %}
+    &nbsp;<strong>{{ step.name }}</strong>
+    <span class="muted">· {{ step.type }} · {{ step.duration_ms }} ms</span>
+  </summary>
+  {% if step.error %}<div class="flash err" style="margin:10px 0">{{ step.error }}</div>{% endif %}
+  <pre>{{ step.result|prettyjson }}</pre>
+</details>
+{% else %}
+<p class="muted">No steps executed.</p>
+{% endfor %}
+{% endblock %}

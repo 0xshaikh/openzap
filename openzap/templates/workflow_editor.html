@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p class="lede">
+  Edit the workflow JSON below. Saving validates the definition and writes it to
+  <code>{{ settings.workflows_dir }}/</code>, then re-indexes it in SQLite.
+  Existing webhook URLs are preserved.
+</p>
+
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+{% if notice %}<div class="flash ok">{{ notice }}</div>{% endif %}
+
+<form method="post" action="{{ root_path }}/workflows/{{ name or 'new' }}/save">
+  <label class="f muted" style="margin-bottom:8px">Workflow JSON
+    <textarea name="definition" class="code">{{ definition|prettyjson }}</textarea>
+  </label>
+  <div class="row">
+    <button class="btn" type="submit">Validate &amp; save</button>
+    <a class="btn ghost" href="{{ root_path }}/workflows/{{ name }}">Cancel</a>
+    {% if name %}
+    <form method="post" action="{{ root_path }}/workflows/{{ name }}/delete"
+          onsubmit="return confirm('Delete {{ name }}?')" style="display:inline;margin-left:auto">
+      <button class="btn danger" type="submit">Delete workflow</button>
+    </form>
+    {% endif %}
+  </div>
+</form>
+
+<h2>Placeholder reference</h2>
+<div class="panel small">
+  <p class="muted" style="margin:0 0 8px">
+    Templates are substituted before every step runs. Only dictionaries and lists are
+    traversed, so templates cannot execute code.
+  </p>
+  <pre>trigger.body.email        field from the incoming payload
+trigger.headers.host      request header (dashes become underscores)
+trigger.query.page        query string parameter
+steps.lookup.body.url     output of an earlier step named "lookup"
+env.SMTP_FROM             OPENZAP_* / SMTP_* environment variables
+{{ '{{ now.iso }}' }}               ISO-8601 UTC timestamp of this run</pre>
+</div>
+{% endblock %}

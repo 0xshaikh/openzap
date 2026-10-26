@@ -1,0 +1,14 @@
+# OpenZap runtime dependencies
+fastapi>=0.115
+uvicorn[standard]>=0.30
+APScheduler>=3.10,<4
+requests>=2.32
+Jinja2>=3.1
+python-multipart>=0.0.9
+
+# Optional: enables YAML workflow files (JSON always works)
+PyYAML>=6.0
+
+# Test dependencies (needed for `make test` / `pytest -q`)
+pytest>=8.0
+httpx>=0.27

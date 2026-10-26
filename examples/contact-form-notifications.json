@@ -1,0 +1,32 @@
+{
+  "name": "contact-form-notifications",
+  "description": "Accept a contact-form webhook, email the lead and append a row to a JSONL file.",
+  "enabled": true,
+  "stop_on_error": true,
+  "trigger": {
+    "type": "webhook",
+    "config": {}
+  },
+  "steps": [
+    {
+      "name": "notify",
+      "type": "email",
+      "to": "you@example.com",
+      "subject": "New contact form message from {{ trigger.body.name }}",
+      "body": "Name: {{ trigger.body.name }}\nEmail: {{ trigger.body.email }}\n\nMessage:\n{{ trigger.body.message }}"
+    },
+    {
+      "name": "persist",
+      "type": "write_file",
+      "path": "leads.jsonl",
+      "data": "{{ trigger.body }}",
+      "append": true
+    },
+    {
+      "name": "ack",
+      "type": "log",
+      "level": "info",
+      "message": "stored lead {{ trigger.body.email }} at {{ steps.persist.path }}"
+    }
+  ]
+}

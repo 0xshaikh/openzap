@@ -1,0 +1,34 @@
+{
+  "name": "webhook-to-slack",
+  "description": "Forward every inbound webhook payload to a Slack channel and keep an audit trail.",
+  "enabled": true,
+  "stop_on_error": false,
+  "trigger": {
+    "type": "webhook",
+    "config": {
+      "secret": "change-me-to-a-shared-secret"
+    }
+  },
+  "steps": [
+    {
+      "name": "notify",
+      "type": "slack_webhook",
+      "url": "https://hooks.slack.com/services/XXXX/YYYY/ZZZZ",
+      "text": ":rocket: New event from {{ trigger.body.email }} at {{ now.iso }}"
+    },
+    {
+      "name": "audit",
+      "type": "log",
+      "level": "info",
+      "message": "notified about {{ trigger.body.email }} (source: {{ trigger.headers.host }})",
+      "data": "{{ trigger.body }}"
+    },
+    {
+      "name": "archive",
+      "type": "write_file",
+      "path": "archive/leads.jsonl",
+      "data": "{{ trigger.body }}",
+      "append": true
+    }
+  ]
+}

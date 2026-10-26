@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Workflows{% endblock %}
+{% block content %}
+{% set count = workflows|length %}
+<h1>Workflows</h1>
+<p class="lede">
+  {{ count }} workflow{% if count != 1 %}s{% endif %} in
+  <code>{{ settings.home }}</code>. Post to a webhook URL or wait for a cron tick to fire a run.
+</p>
+
+<div class="grid cards">
+  <div class="card"><div class="k">Workflows</div><div class="v">{{ workflows|length }}</div></div>
+  <div class="card"><div class="k">Enabled</div><div class="v">{{ enabled_count }}</div></div>
+  <div class="card"><div class="k">Runs recorded</div><div class="v">{{ run_count }}</div></div>
+  <div class="card"><div class="k">Webhook base</div><div class="v small mono">{{ settings.webhook_base() }}</div></div>
+</div>
+
+<div class="panel">
+{% if workflows %}
+<table>
+  <thead>
+    <tr>
+      <th>Name</th><th>Trigger</th><th>Webhook URL</th><th>Last run</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for wf in workflows %}
+    <tr>
+      <td>
+        <a href="{{ root_path }}/workflows/{{ wf.name }}"><strong>{{ wf.name }}</strong></a>
+        <div class="small muted">{{ wf.description or '—' }}</div>
+      </td>
+      <td>
+        {% if wf.trigger_type == 'schedule' %}
+          <code>{{ wf.trigger_cron }}</code>
+        {% else %}
+          webhook
+        {% endif %}
+        {% if not wf.enabled %}<span class="pill off">disabled</span>{% endif %}
+      </td>
+      <td>
+        {% if wf.hook_url %}
+          <span class="hook">{{ wf.hook_url }}</span>
+        {% else %}
+          <span class="muted">—</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if wf.last_run %}
+          {% if wf.last_run.status == 'success' %}
+            <span class="pill ok">success</span>
+          {% else %}
+            <span class="pill err">failed</span>
+          {% endif %}
+          <div class="small muted">{{ wf.last_run.duration_ms }} ms · {{ wf.last_run.started_at }}</div>
+        {% else %}
+          <span class="muted">never run</span>
+        {% endif %}
+      </td>
+      <td class="row" style="justify-content:flex-end">
+        <a class="btn ghost" href="{{ root_path }}/workflows/{{ wf.name }}/edit">Edit</a>
+        <form method="post" action="{{ root_path }}/workflows/{{ wf.name }}/run" style="display:inline">
+          <input type="hidden" name="payload" value='{}'>
+          <button class="btn ghost" type="submit">Run</button>
+        </form>
+        <form method="post" action="{{ root_path }}/workflows/{{ wf.name }}/delete" style="display:inline"
+              onsubmit="return confirm('Delete {{ wf.name }}?')">
+          <button class="btn danger" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No workflows yet. <a href="{{ root_path }}/workflows/new">Create the first one</a> or run
+  <code>openzap init</code> in a terminal to import a sample.</p>
+{% endif %}
+</div>
+{% endblock %}
